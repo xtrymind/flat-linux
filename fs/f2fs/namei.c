@@ -16,7 +16,6 @@
 
 #include "f2fs.h"
 #include "node.h"
-#include "segment.h"
 #include "xattr.h"
 #include "acl.h"
 #include <trace/events/f2fs.h>
@@ -182,19 +181,16 @@ static inline void set_file_temperature(struct f2fs_sb_info *sbi, struct inode *
 	hot_count = sbi->raw_super->hot_ext_count;
 
 	for (i = 0; i < cold_count + hot_count; i++) {
-		if (is_extension_exist(name, extlist[i]))
-			break;
+		if (!is_extension_exist(name, extlist[i]))
+			continue;
+		if (i < cold_count)
+			file_set_cold(inode);
+		else
+			file_set_hot(inode);
+		break;
 	}
 
 	up_read(&sbi->sb_lock);
-
-	if (i == cold_count + hot_count)
-		return;
-
-	if (i < cold_count)
-		file_set_cold(inode);
-	else
-		file_set_hot(inode);
 }
 
 int f2fs_update_extension_list(struct f2fs_sb_info *sbi, const char *name,
@@ -273,9 +269,6 @@ static int f2fs_create(struct inode *dir, struct dentry *dentry, umode_t mode,
 
 	if (unlikely(f2fs_cp_error(sbi)))
 		return -EIO;
-	err = f2fs_is_checkpoint_ready(sbi);
-	if (err)
-		return err;
 
 	err = dquot_initialize(dir);
 	if (err)
@@ -322,9 +315,6 @@ static int f2fs_link(struct dentry *old_dentry, struct inode *dir,
 
 	if (unlikely(f2fs_cp_error(sbi)))
 		return -EIO;
-	err = f2fs_is_checkpoint_ready(sbi);
-	if (err)
-		return err;
 
 	err = fscrypt_prepare_link(old_dentry, dir, dentry);
 	if (err)
@@ -571,9 +561,6 @@ static int f2fs_symlink(struct inode *dir, struct dentry *dentry,
 
 	if (unlikely(f2fs_cp_error(sbi)))
 		return -EIO;
-	err = f2fs_is_checkpoint_ready(sbi);
-	if (err)
-		return err;
 
 	err = fscrypt_prepare_symlink(dir, symname, len, dir->i_sb->s_blocksize,
 				      &disk_link);
@@ -703,9 +690,6 @@ static int f2fs_mknod(struct inode *dir, struct dentry *dentry,
 
 	if (unlikely(f2fs_cp_error(sbi)))
 		return -EIO;
-	err = f2fs_is_checkpoint_ready(sbi);
-	if (err)
-		return err;
 
 	err = dquot_initialize(dir);
 	if (err)
@@ -840,9 +824,6 @@ static int f2fs_rename(struct inode *old_dir, struct dentry *old_dentry,
 
 	if (unlikely(f2fs_cp_error(sbi)))
 		return -EIO;
-	err = f2fs_is_checkpoint_ready(sbi);
-	if (err)
-		return err;
 
 	if (is_inode_flag_set(new_dir, FI_PROJ_INHERIT) &&
 			(!projid_eq(F2FS_I(new_dir)->i_projid,
@@ -1033,9 +1014,6 @@ static int f2fs_cross_rename(struct inode *old_dir, struct dentry *old_dentry,
 
 	if (unlikely(f2fs_cp_error(sbi)))
 		return -EIO;
-	err = f2fs_is_checkpoint_ready(sbi);
-	if (err)
-		return err;
 
 	if ((is_inode_flag_set(new_dir, FI_PROJ_INHERIT) &&
 			!projid_eq(F2FS_I(new_dir)->i_projid,
@@ -1157,8 +1135,6 @@ static int f2fs_cross_rename(struct inode *old_dir, struct dentry *old_dentry,
 
 	if (IS_DIRSYNC(old_dir) || IS_DIRSYNC(new_dir))
 		f2fs_sync_fs(sbi->sb, 1);
-
-	f2fs_update_time(sbi, REQ_TIME);
 	return 0;
 out_new_dir:
 	if (new_dir_entry) {

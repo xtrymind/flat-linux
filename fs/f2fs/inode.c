@@ -365,12 +365,6 @@ static int do_read_inode(struct inode *inode)
 	if (f2fs_has_inline_data(inode) && !f2fs_exist_data(inode))
 		__recover_inline_status(inode, node_page);
 
-	/* try to recover cold bit for non-dir inode */
-	if (!S_ISDIR(inode->i_mode) && !is_cold_node(node_page)) {
-		set_cold_node(node_page, false);
-		set_page_dirty(node_page);
-	}
-
 	/* get rdev by using inline_info */
 	__get_inode_rdev(inode, ri);
 
@@ -613,9 +607,6 @@ int f2fs_write_inode(struct inode *inode, struct writeback_control *wbc)
 	if (!is_inode_flag_set(inode, FI_DIRTY_INODE))
 		return 0;
 
-	if (f2fs_is_checkpoint_ready(sbi))
-		return -ENOSPC;
-
 	/*
 	 * We need to balance fs here to prevent from producing dirty node pages
 	 * during the urgent cleaning time when runing out of free sections.
@@ -697,8 +688,7 @@ no_delete:
 	stat_dec_inline_dir(inode);
 	stat_dec_inline_inode(inode);
 
-	if (likely(!is_set_ckpt_flags(sbi, CP_ERROR_FLAG) &&
-				!is_sbi_flag_set(sbi, SBI_CP_DISABLED)))
+	if (likely(!is_set_ckpt_flags(sbi, CP_ERROR_FLAG)))
 		f2fs_bug_on(sbi, is_inode_flag_set(inode, FI_DIRTY_INODE));
 	else
 		f2fs_inode_synced(inode);
