@@ -511,6 +511,9 @@ choice
 	config OPTIMIZE_FOR_2500
 		bool "Intel Core i5-2500 (Sandybridge)"
 
+	config OPTIMIZE_FOR_3217U
+		bool "Intel Core i3-3217U (Ivybridge)"
+
 endchoice
 
 #
