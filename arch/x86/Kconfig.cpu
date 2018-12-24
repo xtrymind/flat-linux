@@ -502,10 +502,17 @@ config OPTIMIZE_SPECIFICALLY
 
 choice
 	prompt "Specify CPU"
+	default OPTIMIZE_FOR_2500
 	depends on OPTIMIZE_SPECIFICALLY
 	help
 	  Specify CPU for CONFIG_OPTIMIZE_SPECIFICALLY.
 	  Invalid, unsupported CPU will break the build.
+
+	config OPTIMIZE_FOR_2500
+		bool "Intel Core i5-2500 (Sandybridge)"
+
+	config OPTIMIZE_FOR_3217U
+		bool "Intel Core i3-3217U (Ivybridge)"
 
 endchoice
 
