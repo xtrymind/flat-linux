@@ -294,6 +294,10 @@ do { \
 #define true  1
 #endif
 
+#ifdef RTL8168_DEBUG
+#undef RTL8168_DEBUG
+#endif
+
 //Hardware will continue interrupt 10 times after interrupt finished.
 #define RTK_KEEP_INTERRUPT_COUNT (10)
 
