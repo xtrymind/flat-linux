@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: GPL-2.0
 VERSION = 5
 PATCHLEVEL = 0
-SUBLEVEL = 0
-EXTRAVERSION = -zen
-NAME = High Five
+SUBLEVEL = 1
+EXTRAVERSION =
+NAME = Shy Crocodile
 
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
