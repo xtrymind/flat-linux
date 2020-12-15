@@ -25,7 +25,7 @@
 /* Are we using CONFIG_MODVERSIONS? */
 static int modversions = 0;
 /* Warn about undefined symbols? (do so if we have vmlinux) */
-static int have_vmlinux = 0;
+static int have_vmlinux = 1;
 /* Is CONFIG_MODULE_SRCVERSION_ALL set? */
 static int all_versions = 0;
 /* If we are modposting external module set to 1 */
